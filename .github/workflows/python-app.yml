@@ -1,0 +1,62 @@
+name: Python package
+
+on:
+  push:
+    branches: [ main, staging, production ]
+  pull_request:
+    branches: [ main, staging, production ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend/app
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10"]
+
+    steps:
+    - name: Checkout current code
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false
+    - name: Cache Poetry modules
+      uses: actions/cache@v3
+      id: cache-poetry
+      env:
+        cache-name: cache-poetry-modules
+      with:
+        path: ~/.cache/pypoetry/virtualenvs
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-build-${{ env.cache-name }}-
+          ${{ runner.os }}-build-
+          ${{ runner.os }}-
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+    - name: Poetry Version
+      run: |
+        poetry --version
+    - name: Poetry Install Dependencies
+      if: steps.cache-poetry.outputs.cache-hit != 'true'
+      run: |
+        poetry install --no-interaction
+    - name: Lint with flake8
+      run: |
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        poetry run flake8 app/ --exclude backend/app/.venv --count --exit-zero --max-complexity=10 --max-line-length=127 --show-source --statistics
+    - name: Code Check with bandit
+      run: |
+        poetry run bandit -x "tests/**.py" -r app
+    - name: Imports Check with isort
+      run: |
+        poetry run isort . -c

@@ -1,0 +1,52 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+# 無視して欲しい時はオプション`--no-verify`でコミットが通ります `$ git commit --no-verify`
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.0.1
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: detect-private-key
+  - repo: https://github.com/ambv/black
+    rev: 22.3.0
+    hooks:
+      - id: black
+        verbose: true
+        additional_dependencies: [toml]
+
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.9.2
+    hooks:
+      - id: flake8
+        verbose: true
+        args:
+          [
+            --max-line-length,
+            "127",
+            --count,
+            --exit-zero,
+            --max-complexity,
+            "10",
+            --show-source,
+            --statistics,
+          ]
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: v5.9.3
+    hooks:
+      - id: isort
+        verbose: true
+        additional_dependencies: [toml]
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.1
+    hooks:
+      - id: bandit
+        args:
+          [
+            -x,
+            "**/tests/**",
+            -r,
+            "./app",
+            "**/*.py",
+          ]

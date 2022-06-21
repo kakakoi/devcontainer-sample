@@ -1,0 +1,2 @@
+git config --local user.name {username}
+git config --local user.email {hoge}+{username}@users.noreply.github.com
